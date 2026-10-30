@@ -1,0 +1,22 @@
+# Caddyfile - Reverse Proxy com SSL Automático Let's Encrypt para Hostinger KVM 2
+# Substitua 'seudominio.com' pelo seu domínio ou subdomínio apontado para o IP da VPS.
+
+seu-dominio.com {
+    # Redireciona chamadas da API diretamente para a porta do backend FastAPI
+    handle /api/backend/* {
+        uri strip_prefix /api/backend
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # Todo o restante vai para o frontend Next.js
+    handle {
+        reverse_proxy 127.0.0.1:3107
+    }
+
+    # Configuração de limites de upload para vídeos de até 4 GB
+    request_body {
+        max_size 4GB
+    }
+
+    encode gzip zstd
+}
