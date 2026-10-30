@@ -72,10 +72,9 @@ class YouTubeDownloader:
             "noplaylist": True,
             "overwrites": True,
             # Optimized for speed and reliability
-            "socket_timeout": 30,
-            "retries": 5,  # Increased retries
-            "fragment_retries": 5,
-            "http_chunk_size": 10485760,  # 10MB chunks
+            "socket_timeout": 60,
+            "retries": 10,
+            "fragment_retries": 10,
             # Quiet operation - only errors/warnings
             "quiet": True,
             "no_warnings": False,  # Show warnings but not info
@@ -96,6 +95,18 @@ class YouTubeDownloader:
             "prefer_insecure": False,
             "age_limit": None,
         }
+
+        # Check for cookies file to bypass 403 Forbidden on datacenter IPs
+        for candidate in [
+            self.temp_dir / "cookies.txt",
+            Path("/app/cookies.txt"),
+            Path("cookies.txt"),
+            Path("/app/uploads/cookies.txt"),
+        ]:
+            if candidate.is_file():
+                opts["cookiefile"] = str(candidate)
+                logger.info("Using YouTube cookies from %s", candidate)
+                break
 
         return opts
 
@@ -118,6 +129,16 @@ def _build_info_options(task_id: Optional[str] = None) -> Dict[str, Any]:
         },
         "nocheckcertificate": True,
     }
+    for candidate in [
+        Path(get_config().temp_dir) / "cookies.txt",
+        Path("/app/cookies.txt"),
+        Path("cookies.txt"),
+        Path("/app/uploads/cookies.txt"),
+    ]:
+        if candidate.is_file():
+            ydl_opts["cookiefile"] = str(candidate)
+            break
+
     if proxy_configured():
         # Metadata must leave through the same proxy as the media, or YouTube
         # bot-checks the server IP before a download starts. No player client
