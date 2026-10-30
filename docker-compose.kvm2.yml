@@ -11,7 +11,7 @@ services:
         - NEXT_PUBLIC_MAX_VIDEO_UPLOAD_BYTES=${MAX_VIDEO_UPLOAD_BYTES:-4000000000}
     container_name: supoclip-frontend
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3107}:3107"
+      - "0.0.0.0:${FRONTEND_PORT:-3107}:3107"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
@@ -53,7 +53,7 @@ services:
     platform: linux/amd64
     command: [".venv/bin/uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
     ports:
-      - "127.0.0.1:8000:8000"
+      - "0.0.0.0:8000:8000"
     volumes:
       - uploads:/app/uploads
       - clips:/app/clips
