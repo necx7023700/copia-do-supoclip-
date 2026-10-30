@@ -121,27 +121,34 @@ export async function uploadVideoFile(
   const formData = new FormData();
   formData.append("video", file);
 
-  const uploadResponse = await fetch(uploadAuthorization.uploadUrl, {
-    method: "POST",
-    headers: uploadAuthorization.headers,
-    body: formData,
-  });
+  try {
+    const uploadResponse = await fetch(uploadAuthorization.uploadUrl, {
+      method: "POST",
+      headers: uploadAuthorization.headers,
+      body: formData,
+    });
 
-  if (!uploadResponse.ok) {
-    const fallbackMessage =
-      uploadResponse.status === 413
-        ? uploadTooLargeMessage(maxBytes)
-        : `Upload error: ${uploadResponse.status}`;
-    const uploadError = await parseApiError(uploadResponse, fallbackMessage);
-    throw new Error(formatSupportMessage(uploadError));
+    if (!uploadResponse.ok) {
+      const fallbackMessage =
+        uploadResponse.status === 413
+          ? uploadTooLargeMessage(maxBytes)
+          : `Upload error: ${uploadResponse.status}`;
+      const uploadError = await parseApiError(uploadResponse, fallbackMessage);
+      throw new Error(formatSupportMessage(uploadError));
+    }
+
+    const uploadResult = await uploadResponse.json();
+    if (typeof uploadResult.video_path !== "string" || !uploadResult.video_path) {
+      throw new Error("Upload finished without a video path. Please try again.");
+    }
+
+    return uploadResult.video_path;
+  } catch (error) {
+    // If direct upload fails (e.g. Failed to fetch due to CORS or unreachable port 8000),
+    // automatically fallback to the Next.js internal proxy upload.
+    console.warn("Direct upload failed, attempting fallback to proxy upload:", error);
+    return uploadVideoFileViaProxy(file, maxBytes);
   }
-
-  const uploadResult = await uploadResponse.json();
-  if (typeof uploadResult.video_path !== "string" || !uploadResult.video_path) {
-    throw new Error("Upload finished without a video path. Please try again.");
-  }
-
-  return uploadResult.video_path;
 }
 
 async function uploadVideoFileToS3(file: File, authorization: S3UploadAuthorization): Promise<string> {

@@ -11,7 +11,7 @@ services:
         - NEXT_PUBLIC_MAX_VIDEO_UPLOAD_BYTES=${MAX_VIDEO_UPLOAD_BYTES:-4000000000}
     container_name: supoclip-frontend
     ports:
-      - "${FRONTEND_PORT:-80}:3107"
+      - "${FRONTEND_PORT:-3107}:3107"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1

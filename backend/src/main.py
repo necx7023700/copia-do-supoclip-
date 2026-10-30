@@ -90,6 +90,7 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=runtime_config.cors_origins,
+        allow_origin_regex=r"^https?://.*",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=[

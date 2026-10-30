@@ -29,11 +29,21 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!hasSignedBackendAuth()) {
+  // In self-host mode or single-server VPS, ALWAYS use the Next.js streaming proxy (/api/upload).
+  // This streams directly to http://backend:8000 over Docker's internal network,
+  // completely eliminating CORS issues, port 8000 firewall blocks, and build-time URL mismatches.
+  const isSelfHost =
+    process.env.NEXT_PUBLIC_SELF_HOST === "true" ||
+    process.env.SELF_HOST === "true" ||
+    !process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL.includes("localhost") ||
+    !hasSignedBackendAuth();
+
+  if (isSelfHost) {
     return NextResponse.json(
       {
         directUpload: false,
-        reason: "signed_backend_auth_required",
+        reason: "proxy_upload",
       },
       {
         headers: {
